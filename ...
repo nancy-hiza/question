@@ -1,0 +1,150 @@
+int segPins[] = {9,8,7,6,5,4,3,2};
+int displayPins[] = {10};
+int displayBuf[1];
+const int buttonPin = 11;     // the number of the pushbutton pin
+
+unsigned long lastTimeButtonStateChanged = millis();
+unsigned long debounceDuration = 50;
+
+byte segCode1[10][8]= {
+  {1,1,1,1,1,1,0,0}, //0
+  {0,1,1,0,0,0,0,0}, //1
+  {1,1,0,1,1,0,1,0}, //2
+  {1,1,1,1,0,0,1,0}, //3
+  {0,1,1,0,0,1,1,0}, //4
+  {1,0,1,1,0,1,1,0}, //5
+  {1,0,1,1,1,1,1,0}, //6
+  {1,1,1,0,0,0,0,0}, //7
+  {1,1,1,1,1,1,1,0}, //8
+  {1,1,1,1,0,1,1,0}, //9
+};
+
+
+
+void refreshDisplay( int digit0){
+  digitalWrite(displayPins[0], HIGH);
+  
+  setSegments1(digit0);
+  delay(5);
+}
+
+void setSegments1(int n){
+  for(int i = 0; i<8; i++){
+    digitalWrite(segPins[i], segCode1[n][i]);
+  }
+}
+
+byte count = HIGH;
+byte buttonState;
+byte lastButtonState;
+
+void setup() {
+  // put your setup code here, to run once:
+for(int i = 0; i< 8; i++){
+    pinMode(segPins[i], OUTPUT);
+  }
+  pinMode(displayPins[0], OUTPUT);
+
+  displayBuf[0] = 0;
+  pinMode(buttonPin, INPUT);
+  lastButtonState = digitalRead(buttonPin);
+}
+
+int i = 0;
+int b;
+
+int startTime = 0;
+int endTime;
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  // check how to count up or down depend on the condition
+ if(millis() - lastTimeButtonStateChanged >= debounceDuration){
+  buttonState =  digitalRead(buttonPin);
+  
+  // count up
+    if(count == HIGH){
+        if(buttonState == HIGH){
+          
+          refreshDisplay( displayBuf[0]);
+          
+          endTime = millis();
+    
+          if((endTime - startTime) >= 1000){
+            if(++i > 9){
+              i = 0;
+            }
+            displayBuf[0] = i;
+    
+            startTime = endTime;
+            lastButtonState = buttonState;
+//            count = LOW;
+          }
+        }
+        else {
+          
+          refreshDisplay( displayBuf[0]);
+          if(lastButtonState == HIGH){
+              count = LOW;
+              if(i > 5){
+                  if(i == 6){i = i -2;}
+                  if(i == 7){i = i - 4;}
+                  if(i == 8){i = i - 6;}
+                  if(i == 9){i = i - 8;}
+                }
+              else{
+                if(i == 1){i = i + 8;}
+                if(i == 2){i = i + 6;}
+                if(i == 3){i = i + 4;}
+                if(i == 4){i = i + 2;}
+              } 
+            }
+         }
+      }
+
+      // count down
+      if ( count == LOW){
+        if(buttonState == HIGH){
+          refreshDisplay( displayBuf[0]);
+    
+          endTime = millis();
+          if((endTime - startTime) >= 1000){
+            i++;
+            if(9-i < 0){
+              i = 0;
+    
+            }
+            
+            if(i != 0){
+              displayBuf[0] = 10 -i;
+            }
+            else{
+              displayBuf[0] = 0;
+            }
+    
+            startTime = endTime;
+            lastButtonState = !buttonState;
+          }
+        }
+        else {  
+          refreshDisplay( displayBuf[0]);
+          if(lastButtonState == LOW){
+              count = HIGH;
+              if(i < 5){
+                  if(i ==1){i = i - 2;}
+                  if(i == 2){i = i+ 6;}
+                  if(i == 3){i = i+ 4;}
+                  if(i == 4){i = i+ 2;}
+                }
+              else{
+                  if(i == 6){i = i -2;}
+                  if(i == 7){i = i - 4;}
+                  if(i == 8){i = i - 6;}
+                  if(i == 9){i = i - 8;}
+              }
+            }
+        }          
+     }
+ }    
+}
